@@ -301,11 +301,104 @@ Think about:
         return False, None
 
 
+class GameAnalytics:
+    def __init__(self):
+        self.bluff_attempts = []
+        self.challenges = []
+        self.blocks = []
+        self.action_counts = {}
+        self.turn_history = []
+    
+    def record_bluff(self, player_idx: int, model: str, claimed_char: str, had_card: bool, was_challenged: bool, success: bool):
+        self.bluff_attempts.append({
+            "player_idx": player_idx,
+            "model": model,
+            "claimed_character": claimed_char,
+            "had_card": had_card,
+            "was_challenged": was_challenged,
+            "bluff_success": success
+        })
+    
+    def record_challenge(self, challenger_idx: int, challenger_model: str, target_idx: int, target_model: str, 
+                         claimed_char: str, challenge_success: bool, is_block_challenge: bool = False):
+        self.challenges.append({
+            "challenger_idx": challenger_idx,
+            "challenger_model": challenger_model,
+            "target_idx": target_idx,
+            "target_model": target_model,
+            "claimed_character": claimed_char,
+            "challenge_success": challenge_success,
+            "is_block_challenge": is_block_challenge
+        })
+    
+    def record_block(self, blocker_idx: int, blocker_model: str, blocking_char: str, 
+                     against_action: str, had_card: bool, was_challenged: bool, block_success: bool):
+        self.blocks.append({
+            "blocker_idx": blocker_idx,
+            "blocker_model": blocker_model,
+            "blocking_character": blocking_char,
+            "against_action": against_action,
+            "had_card": had_card,
+            "was_challenged": was_challenged,
+            "block_success": block_success
+        })
+    
+    def record_action(self, player_idx: int, model: str, action_type: str):
+        key = (model, action_type)
+        self.action_counts[key] = self.action_counts.get(key, 0) + 1
+    
+    def record_turn(self, turn_data: dict):
+        self.turn_history.append(turn_data)
+    
+    def get_summary(self) -> dict:
+        bluff_stats = {}
+        for bluff in self.bluff_attempts:
+            model = bluff["model"]
+            if model not in bluff_stats:
+                bluff_stats[model] = {"total": 0, "successful": 0, "caught": 0}
+            bluff_stats[model]["total"] += 1
+            if bluff["bluff_success"]:
+                bluff_stats[model]["successful"] += 1
+            if bluff["was_challenged"] and not bluff["had_card"]:
+                bluff_stats[model]["caught"] += 1
+        
+        challenge_stats = {}
+        for challenge in self.challenges:
+            model = challenge["challenger_model"]
+            if model not in challenge_stats:
+                challenge_stats[model] = {"total": 0, "successful": 0}
+            challenge_stats[model]["total"] += 1
+            if challenge["challenge_success"]:
+                challenge_stats[model]["successful"] += 1
+        
+        block_stats = {}
+        for block in self.blocks:
+            model = block["blocker_model"]
+            if model not in block_stats:
+                block_stats[model] = {"total": 0, "successful": 0, "bluffs": 0}
+            block_stats[model]["total"] += 1
+            if block["block_success"]:
+                block_stats[model]["successful"] += 1
+            if not block["had_card"]:
+                block_stats[model]["bluffs"] += 1
+        
+        return {
+            "bluff_stats": bluff_stats,
+            "challenge_stats": challenge_stats,
+            "block_stats": block_stats,
+            "action_counts": {f"{k[0]}|{k[1]}": v for k, v in self.action_counts.items()},
+            "total_turns": len(self.turn_history),
+            "turn_history": self.turn_history
+        }
+
+
 class GameRunner:
     def __init__(self, player_configs: list[dict], max_turns: int = 100):
         self.game = CoupGame(player_configs)
         self.llm_players: dict[int, LLMPlayer] = {}
         self.max_turns = max_turns
+        self.analytics = GameAnalytics()
+        self.player_configs = player_configs
         
         for i, config in enumerate(player_configs):
             self.llm_players[i] = LLMPlayer(config["model"], config["name"])
@@ -316,9 +409,11 @@ class GameRunner:
         
         current_idx = self.game.current_player_index
         current_player = self.game.players[current_idx]
+        current_model = self.player_configs[current_idx]["model"]
         llm_player = self.llm_players[current_idx]
         
         turn_events = []
+        turn_data = {"turn": self.game.turn_number + 1, "player": current_player.name, "model": current_model, "events": []}
         turn_events.append(f"Turn {self.game.turn_number + 1}: {current_player.name}'s turn")
         
         game_state = self.game.get_game_state(for_player_index=current_idx)
@@ -336,6 +431,10 @@ class GameRunner:
             target_index=chosen_action_dict.get("target_index"),
             claimed_character=self.game.CHARACTER_ACTIONS.get(ActionType(chosen_action_dict["action_type"]))
         )
+        
+        self.analytics.record_action(current_idx, current_model, action.action_type.value)
+        turn_data["action"] = action.action_type.value
+        turn_data["target"] = action.target_index
         
         turn_events.append(f"{current_player.name} chooses: {action}")
         
@@ -505,13 +604,59 @@ class GameRunner:
             )
             self.game.apply_exchange(current_idx, kept_indices, all_cards)
         
+        if action.claimed_character and self.game.can_challenge_action(action):
+            had_card = action.claimed_character in current_player.cards
+            was_bluff = not had_card
+            bluff_success = result.get("success", True) or (challenged and had_card)
+            self.analytics.record_bluff(
+                current_idx, current_model,
+                action.claimed_character.value if action.claimed_character else "unknown",
+                had_card, challenged, bluff_success if was_bluff else True
+            )
+        
+        if challenged and challenger_index is not None:
+            challenge_success = result.get("actor_loses_influence") is not None
+            self.analytics.record_challenge(
+                challenger_index, self.player_configs[challenger_index]["model"],
+                current_idx, current_model,
+                action.claimed_character.value if action.claimed_character else "unknown",
+                challenge_success, is_block_challenge=False
+            )
+        
+        if blocked and blocker_index is not None and block_character:
+            blocker_player = self.game.players[blocker_index]
+            had_block_card = block_character in blocker_player.cards
+            block_success = not block_challenged or (block_challenged and had_block_card)
+            self.analytics.record_block(
+                blocker_index, self.player_configs[blocker_index]["model"],
+                block_character.value,
+                action.action_type.value,
+                had_block_card, block_challenged, block_success
+            )
+        
+        if block_challenged and block_challenger_index is not None and block_character:
+            block_challenge_success = result.get("blocker_loses_influence") is not None
+            self.analytics.record_challenge(
+                block_challenger_index, self.player_configs[block_challenger_index]["model"],
+                blocker_index, self.player_configs[blocker_index]["model"],
+                block_character.value,
+                block_challenge_success, is_block_challenge=True
+            )
+        
+        turn_data["events"] = turn_events
+        turn_data["challenged"] = challenged
+        turn_data["blocked"] = blocked
+        turn_data["result_success"] = result.get("success", True)
+        self.analytics.record_turn(turn_data)
+        
         self.game.advance_turn()
         
         return {
             "game_over": self.game.game_over,
             "turn_events": turn_events,
             "game_state": self.game.get_game_state(),
-            "summary": self.game.get_game_summary() if self.game.game_over else None
+            "summary": self.game.get_game_summary() if self.game.game_over else None,
+            "turn_data": turn_data
         }
     
     def run_full_game(self, on_turn_complete=None) -> dict:
@@ -522,4 +667,6 @@ class GameRunner:
             if result["game_over"]:
                 break
         
-        return self.game.get_game_summary()
+        game_summary = self.game.get_game_summary()
+        game_summary["analytics"] = self.analytics.get_summary()
+        return game_summary
