@@ -560,6 +560,73 @@ export class CoupGame {
     return card;
   }
 
+  /** 
+   * Handle the card swap when a challenge fails (player proves they have the card)
+   * Player reveals the card, puts it back in deck, deck shuffles, player draws new card
+   */
+  swapRevealedCard(playerIndex: number, revealedCard: Character): void {
+    const player = this.players[playerIndex];
+    if (!player) return;
+
+    const cardIndex = player.cards.indexOf(revealedCard);
+    if (cardIndex === -1) return;
+
+    // Remove the card from player's hand
+    player.cards.splice(cardIndex, 1);
+    
+    // Put it back in deck
+    this.deck.push(revealedCard);
+    
+    // Shuffle
+    this.shuffleDeck();
+    
+    // Draw a new card
+    const newCard = this.deck.pop();
+    if (newCard) {
+      player.cards.push(newCard);
+    }
+
+    this.logEvent(
+      "card_swap",
+      playerIndex,
+      `${player.name} reveals ${revealedCard}, shuffles it back, draws a new card`
+    );
+  }
+
+  /** Check if a player is still alive */
+  isPlayerAlive(playerIndex: number): boolean {
+    const player = this.players[playerIndex];
+    return player !== undefined && player.cards.length > 0;
+  }
+
+  /** Deduct coins from a player */
+  deductCoins(playerIndex: number, amount: number): void {
+    const player = this.players[playerIndex];
+    if (player) {
+      player.coins = Math.max(0, player.coins - amount);
+    }
+  }
+
+  /** Add coins to a player */
+  addCoins(playerIndex: number, amount: number): void {
+    const player = this.players[playerIndex];
+    if (player) {
+      player.coins += amount;
+    }
+  }
+
+  /** Transfer coins from one player to another */
+  transferCoins(fromIndex: number, toIndex: number, amount: number): number {
+    const from = this.players[fromIndex];
+    const to = this.players[toIndex];
+    if (!from || !to) return 0;
+
+    const actualAmount = Math.min(amount, from.coins);
+    from.coins -= actualAmount;
+    to.coins += actualAmount;
+    return actualAmount;
+  }
+
   /** Apply exchange card selection */
   applyExchange(playerIndex: number, keptIndices: number[], allCards: Character[]): void {
     const player = this.players[playerIndex];

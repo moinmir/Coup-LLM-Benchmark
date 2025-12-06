@@ -194,8 +194,12 @@ export class GameRunner {
       turnEvents.push(`${playerLabel} → ${actionDesc}`);
     }
 
+    // ============================================
+    // PHASE 1: Challenge opportunity on the action
+    // ============================================
     let challenged = false;
     let challengerIndex: number | undefined;
+    let challengeSucceeded = false; // True if the challenger caught a bluff
 
     if (this.game.canChallengeAction(action)) {
       const otherPlayers = this.getShuffledAlivePlayers(currentIdx);
@@ -222,15 +226,122 @@ export class GameRunner {
       }
     }
 
+    // ============================================
+    // PHASE 2: Resolve challenge IMMEDIATELY if it happened
+    // ============================================
+    if (challenged && challengerIndex !== undefined) {
+      const requiredChar = CHARACTER_ACTIONS[action.actionType];
+      const actorHasCard = requiredChar && currentPlayer.cards.includes(requiredChar);
+
+      if (actorHasCard && requiredChar) {
+        // Challenge FAILED - actor had the card, challenger loses influence
+        turnEvents.push(
+          `Challenge failed! ${currentPlayer.name} reveals ${requiredChar}`
+        );
+        
+        // Actor swaps the revealed card back into deck and draws new one
+        this.game.swapRevealedCard(currentIdx, requiredChar);
+        
+        // Challenger loses a card
+        const challenger = this.game.getPlayer(challengerIndex);
+        if (challenger && challenger.cards.length > 0) {
+          const challengerLlm = this.llmPlayers.get(challengerIndex)!;
+          const cardIdx = await challengerLlm.chooseCardToLose(
+            this.game.getPublicGameState(challengerIndex),
+            challenger.cards
+          );
+          const lostCard = this.game.applyInfluenceLoss(challengerIndex, cardIdx);
+          if (lostCard) {
+            turnEvents.push(`💀 P${challengerIndex + 1} loses ${lostCard}`);
+          }
+        }
+        
+        // Record challenge analytics
+        this.recordChallenge({
+          challengerIdx: challengerIndex,
+          challengerModel: this.playerConfigs[challengerIndex]!.model,
+          targetIdx: currentIdx,
+          targetModel: currentModel,
+          claimedCharacter: action.claimedCharacter ?? "unknown",
+          challengeSuccess: false,
+          isBlockChallenge: false,
+        });
+        
+        challengeSucceeded = false;
+      } else {
+        // Challenge SUCCEEDED - actor was bluffing, actor loses influence
+        turnEvents.push(
+          `Challenge succeeded! ${currentPlayer.name} was bluffing`
+        );
+        challengeSucceeded = true;
+        
+        // Actor loses a card
+        if (currentPlayer.cards.length > 0) {
+          const actorLlm = this.llmPlayers.get(currentIdx)!;
+          const cardIdx = await actorLlm.chooseCardToLose(
+            this.game.getPublicGameState(currentIdx),
+            currentPlayer.cards
+          );
+          const lostCard = this.game.applyInfluenceLoss(currentIdx, cardIdx);
+          if (lostCard) {
+            turnEvents.push(`💀 P${currentIdx + 1} loses ${lostCard}`);
+          }
+        }
+        
+        // Assassinate costs coins even if challenged successfully
+        if (action.actionType === "assassinate") {
+          this.game.deductCoins(currentIdx, GAME_CONFIG.ASSASSINATE_COST);
+          turnEvents.push(`${currentPlayer.name} still pays 3 coins for failed assassination`);
+        }
+        
+        // Record challenge analytics
+        this.recordChallenge({
+          challengerIdx: challengerIndex,
+          challengerModel: this.playerConfigs[challengerIndex]!.model,
+          targetIdx: currentIdx,
+          targetModel: currentModel,
+          claimedCharacter: action.claimedCharacter ?? "unknown",
+          challengeSuccess: true,
+          isBlockChallenge: false,
+        });
+        
+        // Action fails - skip to end of turn
+        turnData.events = turnEvents;
+        turnData.challenged = true;
+        turnData.blocked = false;
+        turnData.resultSuccess = false;
+        this.turnHistory.push(turnData);
+        
+        turnEvents.push("✗ Action failed (caught bluffing)");
+        
+        this.game.advanceTurn();
+        
+        return {
+          gameOver: this.game.isGameOver,
+          turnEvents,
+          gameState: this.game.getPublicGameState(),
+          gameStateWithTruth: this.game.getFullGameState(),
+          summary: this.game.isGameOver ? this.getGameSummaryWithAnalytics() : null,
+          turnData,
+        };
+      }
+    }
+
+    // ============================================
+    // PHASE 3: Block opportunity (only if action wasn't stopped by challenge)
+    // ============================================
     let blocked = false;
     let blockerIndex: number | undefined;
     let blockCharacter: Character | undefined;
 
     const blockers = this.game.getBlockers(action);
     
-    if (blockers.length > 0 && (!challenged || (challenged && action.claimedCharacter && currentPlayer.cards.includes(action.claimedCharacter)))) {
+    // Only offer block if there are valid blockers and action is proceeding
+    if (blockers.length > 0) {
       if (action.targetIndex !== null) {
+        // Targeted action - only target can block
         const targetPlayer = this.game.getPlayer(action.targetIndex);
+        // Check if target is still alive (may have been eliminated if they challenged and lost)
         if (targetPlayer && targetPlayer.cards.length > 0) {
           const targetLlm = this.llmPlayers.get(action.targetIndex)!;
           const targetState = this.game.getPublicGameState(action.targetIndex);
@@ -250,9 +361,13 @@ export class GameRunner {
           }
         }
       } else if (action.actionType === "foreign_aid") {
+        // Foreign Aid - any player with Duke can block
         const otherPlayers = this.getShuffledAlivePlayers(currentIdx);
         
         for (const { index: i } of otherPlayers) {
+          const player = this.game.getPlayer(i);
+          if (!player || player.cards.length === 0) continue; // Skip eliminated players
+          
           const opponentLlm = this.llmPlayers.get(i)!;
           const opponentState = this.game.getPublicGameState(i);
 
@@ -274,13 +389,20 @@ export class GameRunner {
       }
     }
 
+    // ============================================
+    // PHASE 4: Challenge opportunity on the block
+    // ============================================
     let blockChallenged = false;
     let blockChallengerIndex: number | undefined;
+    let blockChallengeSucceeded = false;
 
     if (blocked && blockCharacter && blockerIndex !== undefined) {
       const otherPlayers = this.getShuffledAlivePlayers(blockerIndex);
       
       for (const { index: i } of otherPlayers) {
+        const player = this.game.getPlayer(i);
+        if (!player || player.cards.length === 0) continue; // Skip eliminated players
+        
         const opponentLlm = this.llmPlayers.get(i)!;
         const opponentState = this.game.getPublicGameState(i);
 
@@ -300,77 +422,221 @@ export class GameRunner {
       }
     }
 
-    const result = this.game.executeAction(action, {
-      challenged,
-      challengerIndex,
-      blocked,
-      blockerIndex,
-      blockCharacter,
-      blockChallenged,
-      blockChallengerIndex,
-    });
+    // ============================================
+    // PHASE 5: Resolve block challenge if it happened
+    // ============================================
+    if (blockChallenged && blockChallengerIndex !== undefined && blockerIndex !== undefined) {
+      const blocker = this.game.getPlayer(blockerIndex)!;
+      const blockerHasCard = blockCharacter && blocker.cards.includes(blockCharacter);
 
-    for (const event of result.events) {
-      if (!turnEvents.some((e) => e.includes(event.description))) {
-        turnEvents.push(event.description);
-      }
-    }
-
-    const influenceLosses = [
-      { key: "challengerLosesInfluence", idx: result.challengerLosesInfluence },
-      { key: "actorLosesInfluence", idx: result.actorLosesInfluence },
-      { key: "blockerLosesInfluence", idx: result.blockerLosesInfluence },
-      { key: "blockChallengerLosesInfluence", idx: result.blockChallengerLosesInfluence },
-    ];
-
-    for (const { idx } of influenceLosses) {
-      if (idx !== undefined) {
-        const loser = this.game.getPlayer(idx);
-        if (loser && loser.cards.length > 0) {
-          const loserLlm = this.llmPlayers.get(idx)!;
-          const cardIdx = await loserLlm.chooseCardToLose(
-            this.game.getPublicGameState(idx),
-            loser.cards
+      if (blockerHasCard && blockCharacter) {
+        // Block challenge FAILED - blocker had the card, block stands
+        turnEvents.push(
+          `Block challenge failed! ${blocker.name} reveals ${blockCharacter}`
+        );
+        
+        // Blocker swaps the revealed card
+        this.game.swapRevealedCard(blockerIndex, blockCharacter);
+        
+        // Block challenger loses a card
+        const blockChallenger = this.game.getPlayer(blockChallengerIndex);
+        if (blockChallenger && blockChallenger.cards.length > 0) {
+          const challengerLlm = this.llmPlayers.get(blockChallengerIndex)!;
+          const cardIdx = await challengerLlm.chooseCardToLose(
+            this.game.getPublicGameState(blockChallengerIndex),
+            blockChallenger.cards
           );
-          const lostCard = this.game.applyInfluenceLoss(idx, cardIdx);
+          const lostCard = this.game.applyInfluenceLoss(blockChallengerIndex, cardIdx);
           if (lostCard) {
-            turnEvents.push(`💀 P${idx + 1} loses ${lostCard}`);
+            turnEvents.push(`💀 P${blockChallengerIndex + 1} loses ${lostCard}`);
           }
         }
+        
+        // Record block challenge analytics
+        this.recordChallenge({
+          challengerIdx: blockChallengerIndex,
+          challengerModel: this.playerConfigs[blockChallengerIndex]!.model,
+          targetIdx: blockerIndex,
+          targetModel: this.playerConfigs[blockerIndex]!.model,
+          claimedCharacter: blockCharacter,
+          challengeSuccess: false,
+          isBlockChallenge: true,
+        });
+        
+        blockChallengeSucceeded = false;
+        // Block remains valid, action fails
+      } else {
+        // Block challenge SUCCEEDED - blocker was bluffing
+        turnEvents.push(
+          `Block challenge succeeded! ${blocker.name} was bluffing`
+        );
+        blockChallengeSucceeded = true;
+        
+        // Blocker loses a card
+        if (blocker.cards.length > 0) {
+          const blockerLlm = this.llmPlayers.get(blockerIndex)!;
+          const cardIdx = await blockerLlm.chooseCardToLose(
+            this.game.getPublicGameState(blockerIndex),
+            blocker.cards
+          );
+          const lostCard = this.game.applyInfluenceLoss(blockerIndex, cardIdx);
+          if (lostCard) {
+            turnEvents.push(`💀 P${blockerIndex + 1} loses ${lostCard}`);
+          }
+        }
+        
+        // Record block challenge analytics
+        this.recordChallenge({
+          challengerIdx: blockChallengerIndex,
+          challengerModel: this.playerConfigs[blockChallengerIndex]!.model,
+          targetIdx: blockerIndex,
+          targetModel: this.playerConfigs[blockerIndex]!.model,
+          claimedCharacter: blockCharacter,
+          challengeSuccess: true,
+          isBlockChallenge: true,
+        });
+        
+        // Block fails, action will proceed
+        blocked = false;
       }
     }
 
-    if (result.targetLosesInfluence !== undefined && result.success) {
-      const loser = this.game.getPlayer(result.targetLosesInfluence);
-      if (loser && loser.cards.length > 0) {
-        const loserLlm = this.llmPlayers.get(result.targetLosesInfluence)!;
-        const cardIdx = await loserLlm.chooseCardToLose(
-          this.game.getPublicGameState(result.targetLosesInfluence),
-          loser.cards
-        );
-        const lostCard = this.game.applyInfluenceLoss(result.targetLosesInfluence, cardIdx);
-        if (lostCard) {
-          turnEvents.push(`💀 P${result.targetLosesInfluence + 1} loses ${lostCard}`);
+    // ============================================
+    // PHASE 6: Execute the action (if not blocked)
+    // ============================================
+    let actionSuccess = true;
+    
+    // Record block analytics
+    if (blockerIndex !== undefined && blockCharacter) {
+      const blockerPlayer = this.game.getPlayer(blockerIndex);
+      const hadBlockCard = blockerPlayer ? blockerPlayer.cards.includes(blockCharacter) : false;
+      const blockSuccess = blocked && (!blockChallenged || !blockChallengeSucceeded);
+
+      this.recordBlock({
+        blockerIdx: blockerIndex,
+        blockerModel: this.playerConfigs[blockerIndex]!.model,
+        blockingCharacter: blockCharacter,
+        againstAction: action.actionType,
+        hadCard: hadBlockCard,
+        wasChallenged: blockChallenged,
+        blockSuccess,
+      });
+    }
+    
+    if (blocked && !blockChallengeSucceeded) {
+      // Block succeeded - action fails
+      actionSuccess = false;
+      turnEvents.push("✗ Action blocked");
+      
+      // Assassinate costs coins even if blocked
+      if (action.actionType === "assassinate") {
+        this.game.deductCoins(currentIdx, GAME_CONFIG.ASSASSINATE_COST);
+      }
+    } else {
+      // Execute the action
+      switch (action.actionType) {
+        case "income":
+          this.game.addCoins(currentIdx, 1);
+          turnEvents.push(`${currentPlayer.name} takes Income (+1 coin, now has ${this.game.getPlayer(currentIdx)!.coins})`);
+          break;
+
+        case "foreign_aid":
+          this.game.addCoins(currentIdx, 2);
+          turnEvents.push(`${currentPlayer.name} takes Foreign Aid (+2 coins, now has ${this.game.getPlayer(currentIdx)!.coins})`);
+          break;
+
+        case "tax":
+          this.game.addCoins(currentIdx, 3);
+          turnEvents.push(`${currentPlayer.name} uses Tax (+3 coins, now has ${this.game.getPlayer(currentIdx)!.coins})`);
+          break;
+
+        case "coup": {
+          this.game.deductCoins(currentIdx, GAME_CONFIG.COUP_COST);
+          const target = this.game.getPlayer(action.targetIndex!)!;
+          turnEvents.push(`${currentPlayer.name} pays 7 coins to Coup ${target.name}`);
+          
+          // Target loses influence
+          if (target.cards.length > 0) {
+            const targetLlm = this.llmPlayers.get(action.targetIndex!)!;
+            const cardIdx = await targetLlm.chooseCardToLose(
+              this.game.getPublicGameState(action.targetIndex!),
+              target.cards
+            );
+            const lostCard = this.game.applyInfluenceLoss(action.targetIndex!, cardIdx);
+            if (lostCard) {
+              turnEvents.push(`💀 P${action.targetIndex! + 1} loses ${lostCard}`);
+            }
+          }
+          break;
+        }
+
+        case "assassinate": {
+          this.game.deductCoins(currentIdx, GAME_CONFIG.ASSASSINATE_COST);
+          const target = this.game.getPlayer(action.targetIndex!)!;
+          turnEvents.push(`${currentPlayer.name} pays 3 coins to Assassinate ${target.name}`);
+          
+          // Target loses influence (if still alive)
+          if (target.cards.length > 0) {
+            const targetLlm = this.llmPlayers.get(action.targetIndex!)!;
+            const cardIdx = await targetLlm.chooseCardToLose(
+              this.game.getPublicGameState(action.targetIndex!),
+              target.cards
+            );
+            const lostCard = this.game.applyInfluenceLoss(action.targetIndex!, cardIdx);
+            if (lostCard) {
+              turnEvents.push(`💀 P${action.targetIndex! + 1} loses ${lostCard}`);
+            }
+          }
+          break;
+        }
+
+        case "steal": {
+          const target = this.game.getPlayer(action.targetIndex!)!;
+          const stealAmount = this.game.transferCoins(action.targetIndex!, currentIdx, GAME_CONFIG.MAX_STEAL_AMOUNT);
+          turnEvents.push(
+            `${currentPlayer.name} steals ${stealAmount} coins from ${target.name} (now has ${this.game.getPlayer(currentIdx)!.coins})`
+          );
+          break;
+        }
+
+        case "exchange": {
+          // Draw 2 cards, choose which to keep
+          const llmPlayer = this.llmPlayers.get(currentIdx)!;
+          
+          // For exchange, we need to work with the game's internal deck
+          // Use a simplified approach - execute via game engine
+          const exchangeResult = this.game.executeAction(action, {
+            challenged: false,
+            blocked: false,
+          });
+          
+          if (exchangeResult.needsExchangeSelection && exchangeResult.exchangeCards && exchangeResult.cardsToKeep !== undefined) {
+            const keptIndices = await llmPlayer.chooseExchangeCards(
+              this.game.getPublicGameState(currentIdx),
+              exchangeResult.exchangeCards,
+              exchangeResult.cardsToKeep
+            );
+            this.game.applyExchange(currentIdx, keptIndices, exchangeResult.exchangeCards);
+            turnEvents.push(`🔄 P${currentIdx + 1} completes exchange`);
+          }
+          break;
         }
       }
+      
+      turnEvents.push("✓ Action successful");
     }
 
-    if (result.needsExchangeSelection && result.exchangeCards && result.cardsToKeep !== undefined) {
-      const keptIndices = await llmPlayer.chooseExchangeCards(
-        this.game.getPublicGameState(currentIdx),
-        result.exchangeCards,
-        result.cardsToKeep
-      );
-      this.game.applyExchange(currentIdx, keptIndices, result.exchangeCards);
-      turnEvents.push(`🔄 P${currentIdx + 1} completes exchange`);
-    }
-
+    // ============================================
+    // PHASE 7: Record bluff analytics (if actor claimed a character they don't have)
+    // ============================================
     if (action.claimedCharacter && this.game.canChallengeAction(action)) {
-      const hadCard = currentPlayer.cards.includes(action.claimedCharacter);
+      // Check original hand (before any swaps)
+      const originalCards = turnData.playerCards;
+      const hadCard = originalCards.includes(action.claimedCharacter);
       const wasBluff = !hadCard;
       
       if (wasBluff) {
-        const bluffSuccess = !challenged;
+        const bluffSuccess = !challenged; // Got away with it if not challenged
         
         this.recordBluff({
           playerIdx: currentIdx,
@@ -383,54 +649,13 @@ export class GameRunner {
       }
     }
 
-    if (challenged && challengerIndex !== undefined) {
-      const challengeSuccess = result.actorLosesInfluence !== undefined;
-      this.recordChallenge({
-        challengerIdx: challengerIndex,
-        challengerModel: this.playerConfigs[challengerIndex]!.model,
-        targetIdx: currentIdx,
-        targetModel: currentModel,
-        claimedCharacter: action.claimedCharacter ?? "unknown",
-        challengeSuccess,
-        isBlockChallenge: false,
-      });
-    }
-
-    if (blocked && blockerIndex !== undefined && blockCharacter) {
-      const blockerPlayer = this.game.getPlayer(blockerIndex)!;
-      const hadBlockCard = blockerPlayer.cards.includes(blockCharacter);
-      const blockSuccess = !blockChallenged || (blockChallenged && hadBlockCard);
-
-      this.recordBlock({
-        blockerIdx: blockerIndex,
-        blockerModel: this.playerConfigs[blockerIndex]!.model,
-        blockingCharacter: blockCharacter,
-        againstAction: action.actionType,
-        hadCard: hadBlockCard,
-        wasChallenged: blockChallenged,
-        blockSuccess,
-      });
-    }
-
-    if (blockChallenged && blockChallengerIndex !== undefined && blockCharacter) {
-      const blockChallengeSuccess = result.blockerLosesInfluence !== undefined;
-      this.recordChallenge({
-        challengerIdx: blockChallengerIndex,
-        challengerModel: this.playerConfigs[blockChallengerIndex]!.model,
-        targetIdx: blockerIndex!,
-        targetModel: this.playerConfigs[blockerIndex!]!.model,
-        claimedCharacter: blockCharacter,
-        challengeSuccess: blockChallengeSuccess,
-        isBlockChallenge: true,
-      });
-    }
-
-    turnEvents.push(result.success ? "✓ Action successful" : "✗ Action failed");
-
+    // ============================================
+    // Finalize turn data and advance
+    // ============================================
     turnData.events = turnEvents;
     turnData.challenged = challenged;
-    turnData.blocked = blocked;
-    turnData.resultSuccess = result.success;
+    turnData.blocked = blocked && !blockChallengeSucceeded;
+    turnData.resultSuccess = actionSuccess;
     this.turnHistory.push(turnData);
 
     this.game.advanceTurn();

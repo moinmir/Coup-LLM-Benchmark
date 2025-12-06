@@ -1,0 +1,82 @@
+=== COUP GAME: game_1765060126531_mo5nyny ===
+Started: 2025-12-06T22:28:46.531Z
+Players: 1. meta-llama/llama-3.3-70b-instruct, 2. meta-llama/llama-3.1-8b-instruct, 3. qwen/qwen-2.5-72b-instruct, 4. google/gemini-2.0-flash-001
+============================================================
+
+--- TURN 1: llama-3.3-70b-instruct ---
+  Turn 1: P1's turn
+  P1 → INCOME
+  P1 takes Income (+1 coin, now has 3)
+  ✓ Action successful
+
+--- TURN 2: llama-3.1-8b-instruct ---
+  Turn 2: P2's turn
+  P2 → STEAL → P1
+  🛡️ P1 blocks with Captain
+  ⚔️ P2 challenges the block
+  Block challenge failed! P1 reveals Captain
+  💀 P2 loses Ambassador
+  ✗ Action blocked
+
+--- TURN 3: qwen-2.5-72b-instruct ---
+  Turn 3: P3's turn
+  P3 → INCOME
+  P3 takes Income (+1 coin, now has 3)
+  ✓ Action successful
+
+--- TURN 4: gemini-2.0-flash-001 ---
+  Turn 4: P4's turn
+  P4 → TAX
+  ⚔️ P3 challenges Duke
+  Challenge failed! P4 reveals Duke
+  💀 P3 loses Assassin
+  P4 uses Tax (+3 coins, now has 5)
+  ✓ Action successful
+
+--- TURN 5: llama-3.3-70b-instruct ---
+  Turn 5: P1's turn
+  P1 → EXCHANGE
+  ⚔️ P3 challenges Ambassador
+  Challenge failed! P1 reveals Ambassador
+  💀 P3 loses Contessa
+  🔄 P1 completes exchange
+  ✓ Action successful
+
+--- TURN 6: llama-3.1-8b-instruct ---
+  Turn 6: P2's turn
+  P2 → TAX
+  ⚔️ P1 challenges Duke
+  Challenge succeeded! P2 was bluffing
+  💀 P2 loses Assassin
+  ✗ Action failed (caught bluffing)
+
+--- TURN 7: gemini-2.0-flash-001 ---
+  Turn 7: P4's turn
+  P4 → STEAL → P1
+  ⚔️ P1 challenges Captain
+  Challenge failed! P4 reveals Captain
+  💀 P1 loses Contessa
+  🛡️ P1 blocks with Ambassador
+  ✗ Action blocked
+
+--- TURN 8: llama-3.3-70b-instruct ---
+  Turn 8: P1's turn
+  P1 → FOREIGN AID
+  P1 takes Foreign Aid (+2 coins, now has 5)
+  ✓ Action successful
+
+--- TURN 9: gemini-2.0-flash-001 ---
+  Turn 9: P4's turn
+  P4 → STEAL → P1
+  ⚔️ P1 challenges Captain
+  Challenge failed! P4 reveals Captain
+  💀 P1 loses Ambassador
+  P4 steals 2 coins from P1 (now has 7)
+  ✓ Action successful
+
+============================================================
+GAME OVER
+Winner: gemini-2.0-flash-001
+Total Turns: 8
+Ended: 2025-12-06T22:29:07.336Z
+============================================================
