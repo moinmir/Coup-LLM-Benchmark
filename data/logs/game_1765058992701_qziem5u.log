@@ -1,0 +1,89 @@
+=== COUP GAME: game_1765058992701_qziem5u ===
+Started: 2025-12-06T22:09:52.702Z
+Players: 1. meta-llama/llama-3.3-70b-instruct, 2. meta-llama/llama-3.1-8b-instruct, 3. qwen/qwen-2.5-72b-instruct, 4. google/gemini-2.0-flash-001
+============================================================
+
+--- TURN 1: llama-3.3-70b-instruct ---
+  Turn 1: P1's turn
+  P1 → INCOME
+  P1 takes Income (+1 coin, now has 3)
+  ✓ Action successful
+
+--- TURN 2: llama-3.1-8b-instruct ---
+  Turn 2: P2's turn
+  P2 → INCOME
+  P2 takes Income (+1 coin, now has 3)
+  ✓ Action successful
+
+--- TURN 3: qwen-2.5-72b-instruct ---
+  Turn 3: P3's turn
+  P3 → INCOME
+  P3 takes Income (+1 coin, now has 3)
+  ✓ Action successful
+
+--- TURN 4: gemini-2.0-flash-001 ---
+  Turn 4: P4's turn
+  P4 → TAX
+  ⚔️ P3 challenges Duke
+  P3 challenged P4 - FAILED! P4 reveals Duke
+  P4 uses Tax (Duke) (+3 coins, now has 5)
+  💀 P3 loses Assassin
+  ✓ Action successful
+
+--- TURN 5: llama-3.3-70b-instruct ---
+  Turn 5: P1's turn
+  P1 → INCOME
+  P1 takes Income (+1 coin, now has 4)
+  ✓ Action successful
+
+--- TURN 6: llama-3.1-8b-instruct ---
+  Turn 6: P2's turn
+  P2 → EXCHANGE
+  ⚔️ P3 challenges Ambassador
+  P3 challenged P2 - SUCCESS! P2 was bluffing
+  💀 P2 loses Captain
+  ✗ Action failed
+
+--- TURN 7: qwen-2.5-72b-instruct ---
+  Turn 7: P3's turn
+  P3 → EXCHANGE
+  ⚔️ P1 challenges Ambassador
+  P1 challenged P3 - FAILED! P3 reveals Ambassador
+  P3 uses Exchange (Ambassador)
+  💀 P1 loses Captain
+  🔄 P3 completes exchange
+  ✓ Action successful
+
+--- TURN 8: gemini-2.0-flash-001 ---
+  Turn 8: P4's turn
+  P4 → ASSASSINATE → P1
+  ⚔️ P1 challenges Assassin
+  🛡️ P1 blocks with Contessa
+  ⚔️ P3 challenges the block
+  P1 challenged P4 - FAILED! P4 reveals Assassin
+  P3 challenged the block - FAILED! P1 reveals Contessa
+  💀 P1 loses Assassin
+  💀 P3 loses Ambassador
+  ✗ Action failed
+
+--- TURN 9: llama-3.1-8b-instruct ---
+  Turn 9: P2's turn
+  P2 → TAX
+  P2 uses Tax (Duke) (+3 coins, now has 6)
+  ✓ Action successful
+
+--- TURN 10: gemini-2.0-flash-001 ---
+  Turn 10: P4's turn
+  P4 → STEAL → P2
+  ⚔️ P2 challenges Captain
+  🛡️ P2 blocks with Captain
+  P2 challenged P4 - FAILED! P4 reveals Captain
+  💀 P2 loses Duke
+  ✗ Action failed
+
+============================================================
+GAME OVER
+Winner: gemini-2.0-flash-001
+Total Turns: 9
+Ended: 2025-12-06T22:10:21.099Z
+============================================================

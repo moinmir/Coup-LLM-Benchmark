@@ -1,0 +1,66 @@
+=== COUP GAME: game_1765058446526_6mp7z3q ===
+Started: 2025-12-06T22:00:46.527Z
+Players: 1. meta-llama/llama-3.3-70b-instruct, 2. meta-llama/llama-3.1-8b-instruct, 3. qwen/qwen-2.5-72b-instruct, 4. google/gemini-2.0-flash-001
+============================================================
+
+--- TURN 1: llama-3.3-70b-instruct ---
+  Turn 1: P1's turn
+  P1 → TAX
+  ⚔️ P3 challenges Duke
+  P3 challenged P1 - FAILED! P1 reveals Duke
+  P1 uses Tax (Duke) (+3 coins, now has 5)
+  💀 P3 loses Captain
+  ✓ Action successful
+
+--- TURN 2: llama-3.1-8b-instruct ---
+  Turn 2: P2's turn
+  P2 → TAX
+  ⚔️ P1 challenges Duke
+  P1 challenged P2 - FAILED! P2 reveals Duke
+  P2 uses Tax (Duke) (+3 coins, now has 5)
+  💀 P1 loses Captain
+  ✓ Action successful
+
+--- TURN 3: qwen-2.5-72b-instruct ---
+  Turn 3: P3's turn
+  P3 → INCOME
+  P3 takes Income (+1 coin, now has 3)
+  ✓ Action successful
+
+--- TURN 4: gemini-2.0-flash-001 ---
+  Turn 4: P4's turn
+  P4 → EXCHANGE
+  ⚔️ P3 challenges Ambassador
+  P3 challenged P4 - FAILED! P4 reveals Ambassador
+  P4 uses Exchange (Ambassador)
+  💀 P3 loses Assassin
+  🔄 P4 completes exchange
+  ✓ Action successful
+
+--- TURN 5: llama-3.3-70b-instruct ---
+  Turn 5: P1's turn
+  P1 → STEAL → P2
+  ⚔️ P2 challenges Captain
+  🛡️ P2 blocks with Ambassador
+  ⚔️ P1 challenges the block
+  P2 challenged P1 - FAILED! P1 reveals Captain
+  P1 challenged the block - FAILED! P2 reveals Ambassador
+  💀 P2 loses Assassin
+  💀 P1 loses Contessa
+  ✗ Action failed
+
+--- TURN 6: llama-3.1-8b-instruct ---
+  Turn 6: P2's turn
+  P2 → STEAL → P4
+  🛡️ P4 blocks with Ambassador
+  ⚔️ P2 challenges the block
+  P2 challenged the block - FAILED! P4 reveals Ambassador
+  💀 P2 loses Contessa
+  ✗ Action failed
+
+============================================================
+GAME OVER
+Winner: gemini-2.0-flash-001
+Total Turns: 5
+Ended: 2025-12-06T22:01:03.114Z
+============================================================

@@ -1,0 +1,146 @@
+=== COUP GAME: game_1764994988303_i85bfrp ===
+Started: 2025-12-06T04:23:08.304Z
+Players: 1. meta-llama/llama-3.3-70b-instruct, 2. meta-llama/llama-3.1-8b-instruct, 3. qwen/qwen-2.5-72b-instruct, 4. google/gemini-2.0-flash-001
+============================================================
+
+--- TURN 1: llama-3.3-70b-instruct ---
+  Turn 1: P1:llama-3.3-70b-instruct's turn (llama-3.3-70b-instruct)
+  → income
+  P1:llama-3.3-70b-instruct takes Income (+1 coin, now has 3)
+  ✓ Action successful
+
+--- TURN 2: llama-3.1-8b-instruct ---
+  Turn 2: P2:llama-3.1-8b-instruct's turn (llama-3.1-8b-instruct)
+  → tax
+  ⚔️ P3:qwen-2.5-72b-instruct challenges the Duke!
+  P3:qwen-2.5-72b-instruct challenged P2:llama-3.1-8b-instruct - FAILED! P2:llama-3.1-8b-instruct reveals Duke
+  P2:llama-3.1-8b-instruct uses Tax (Duke) (+3 coins, now has 5)
+  💀 P3:qwen-2.5-72b-instruct loses Assassin
+  ✓ Action successful
+
+--- TURN 3: qwen-2.5-72b-instruct ---
+  Turn 3: P3:qwen-2.5-72b-instruct's turn (qwen-2.5-72b-instruct)
+  → tax
+  ⚔️ P1:llama-3.3-70b-instruct challenges the Duke!
+  P1:llama-3.3-70b-instruct challenged P3:qwen-2.5-72b-instruct - FAILED! P3:qwen-2.5-72b-instruct reveals Duke
+  P3:qwen-2.5-72b-instruct uses Tax (Duke) (+3 coins, now has 5)
+  💀 P1:llama-3.3-70b-instruct loses Contessa
+  ✓ Action successful
+
+--- TURN 4: gemini-2.0-flash-001 ---
+  Turn 4: P4:gemini-2.0-flash-001's turn (gemini-2.0-flash-001)
+  → steal targeting P1:llama-3.3-70b-instruct
+  🛡️ P1:llama-3.3-70b-instruct blocks with Captain
+  ✗ Action failed
+
+--- TURN 5: llama-3.3-70b-instruct ---
+  Turn 5: P1:llama-3.3-70b-instruct's turn (llama-3.3-70b-instruct)
+  → steal targeting P2:llama-3.1-8b-instruct
+  ⚔️ P3:qwen-2.5-72b-instruct challenges the Captain!
+  🛡️ P2:llama-3.1-8b-instruct blocks with Ambassador
+  ⚔️ P3:qwen-2.5-72b-instruct challenges the block!
+  P3:qwen-2.5-72b-instruct challenged P1:llama-3.3-70b-instruct - FAILED! P1:llama-3.3-70b-instruct reveals Captain
+  P3:qwen-2.5-72b-instruct challenged the block - FAILED! P2:llama-3.1-8b-instruct reveals Ambassador
+  💀 P3:qwen-2.5-72b-instruct loses Duke
+  ✗ Action failed
+
+--- TURN 6: llama-3.1-8b-instruct ---
+  Turn 6: P2:llama-3.1-8b-instruct's turn (llama-3.1-8b-instruct)
+  → exchange
+  P2:llama-3.1-8b-instruct uses Exchange (Ambassador)
+  🔄 P2:llama-3.1-8b-instruct completes exchange
+  ✓ Action successful
+
+--- TURN 7: gemini-2.0-flash-001 ---
+  Turn 7: P4:gemini-2.0-flash-001's turn (gemini-2.0-flash-001)
+  → steal targeting P1:llama-3.3-70b-instruct
+  ⚔️ P2:llama-3.1-8b-instruct challenges the Captain!
+  🛡️ P1:llama-3.3-70b-instruct blocks with Ambassador
+  P2:llama-3.1-8b-instruct challenged P4:gemini-2.0-flash-001 - FAILED! P4:gemini-2.0-flash-001 reveals Captain
+  💀 P2:llama-3.1-8b-instruct loses Captain
+  ✗ Action failed
+
+--- TURN 8: llama-3.3-70b-instruct ---
+  Turn 8: P1:llama-3.3-70b-instruct's turn (llama-3.3-70b-instruct)
+  → income
+  P1:llama-3.3-70b-instruct takes Income (+1 coin, now has 4)
+  ✓ Action successful
+
+--- TURN 9: llama-3.1-8b-instruct ---
+  Turn 9: P2:llama-3.1-8b-instruct's turn (llama-3.1-8b-instruct)
+  → tax
+  ⚔️ P1:llama-3.3-70b-instruct challenges the Duke!
+  P1:llama-3.3-70b-instruct challenged P2:llama-3.1-8b-instruct - SUCCESS! P2:llama-3.1-8b-instruct was bluffing
+  💀 P2:llama-3.1-8b-instruct loses Captain
+  ✗ Action failed
+
+--- TURN 10: gemini-2.0-flash-001 ---
+  Turn 10: P4:gemini-2.0-flash-001's turn (gemini-2.0-flash-001)
+  → income
+  P4:gemini-2.0-flash-001 takes Income (+1 coin, now has 3)
+  ✓ Action successful
+
+--- TURN 11: llama-3.3-70b-instruct ---
+  Turn 11: P1:llama-3.3-70b-instruct's turn (llama-3.3-70b-instruct)
+  → exchange
+  P1:llama-3.3-70b-instruct uses Exchange (Ambassador)
+  🔄 P1:llama-3.3-70b-instruct completes exchange
+  ✓ Action successful
+
+--- TURN 12: gemini-2.0-flash-001 ---
+  Turn 12: P4:gemini-2.0-flash-001's turn (gemini-2.0-flash-001)
+  → assassinate targeting P1:llama-3.3-70b-instruct
+  ⚔️ P1:llama-3.3-70b-instruct challenges the Assassin!
+  P1:llama-3.3-70b-instruct challenged P4:gemini-2.0-flash-001 - SUCCESS! P4:gemini-2.0-flash-001 was bluffing
+  💀 P4:gemini-2.0-flash-001 loses Contessa
+  ✗ Action failed
+
+--- TURN 13: llama-3.3-70b-instruct ---
+  Turn 13: P1:llama-3.3-70b-instruct's turn (llama-3.3-70b-instruct)
+  → income
+  P1:llama-3.3-70b-instruct takes Income (+1 coin, now has 5)
+  ✓ Action successful
+
+--- TURN 14: gemini-2.0-flash-001 ---
+  Turn 14: P4:gemini-2.0-flash-001's turn (gemini-2.0-flash-001)
+  → income
+  P4:gemini-2.0-flash-001 takes Income (+1 coin, now has 1)
+  ✓ Action successful
+
+--- TURN 15: llama-3.3-70b-instruct ---
+  Turn 15: P1:llama-3.3-70b-instruct's turn (llama-3.3-70b-instruct)
+  → steal targeting P4:gemini-2.0-flash-001
+  P1:llama-3.3-70b-instruct steals 1 coins from P4:gemini-2.0-flash-001 (now has 6)
+  ✓ Action successful
+
+--- TURN 16: gemini-2.0-flash-001 ---
+  Turn 16: P4:gemini-2.0-flash-001's turn (gemini-2.0-flash-001)
+  → income
+  P4:gemini-2.0-flash-001 takes Income (+1 coin, now has 1)
+  ✓ Action successful
+
+--- TURN 17: llama-3.3-70b-instruct ---
+  Turn 17: P1:llama-3.3-70b-instruct's turn (llama-3.3-70b-instruct)
+  → steal targeting P4:gemini-2.0-flash-001
+  P1:llama-3.3-70b-instruct steals 1 coins from P4:gemini-2.0-flash-001 (now has 7)
+  ✓ Action successful
+
+--- TURN 18: gemini-2.0-flash-001 ---
+  Turn 18: P4:gemini-2.0-flash-001's turn (gemini-2.0-flash-001)
+  → income
+  P4:gemini-2.0-flash-001 takes Income (+1 coin, now has 1)
+  ✓ Action successful
+
+--- TURN 19: llama-3.3-70b-instruct ---
+  Turn 19: P1:llama-3.3-70b-instruct's turn (llama-3.3-70b-instruct)
+  → coup targeting P4:gemini-2.0-flash-001
+  P1:llama-3.3-70b-instruct pays 7 coins to Coup P4:gemini-2.0-flash-001
+  💀 P4:gemini-2.0-flash-001 loses Contessa
+  ✓ Action successful
+
+============================================================
+GAME OVER
+Winner: llama-3.3-70b-instruct
+Total Turns: 18
+Ended: 2025-12-06T04:23:54.841Z
+============================================================

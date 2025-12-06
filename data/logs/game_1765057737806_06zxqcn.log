@@ -1,0 +1,51 @@
+=== COUP GAME: game_1765057737806_06zxqcn ===
+Started: 2025-12-06T21:48:57.807Z
+Players: 1. meta-llama/llama-3.3-70b-instruct, 2. meta-llama/llama-3.1-8b-instruct, 3. qwen/qwen-2.5-72b-instruct
+============================================================
+
+--- TURN 1: llama-3.3-70b-instruct ---
+  Turn 1: P1's turn
+  P1 → INCOME
+  P1 takes Income (+1 coin, now has 3)
+  ✓ Action successful
+
+--- TURN 2: llama-3.1-8b-instruct ---
+  Turn 2: P2's turn
+  P2 → TAX
+  ⚔️ P3 challenges Duke
+  P3 challenged P2 - FAILED! P2 reveals Duke
+  P2 uses Tax (Duke) (+3 coins, now has 5)
+  💀 P3 loses Captain
+  ✓ Action successful
+
+--- TURN 3: qwen-2.5-72b-instruct ---
+  Turn 3: P3's turn
+  P3 → TAX
+  ⚔️ P1 challenges Duke
+  P1 challenged P3 - FAILED! P3 reveals Duke
+  P3 uses Tax (Duke) (+3 coins, now has 5)
+  💀 P1 loses Contessa
+  ✓ Action successful
+
+--- TURN 4: llama-3.3-70b-instruct ---
+  Turn 4: P1's turn
+  P1 → INCOME
+  P1 takes Income (+1 coin, now has 4)
+  ✓ Action successful
+
+--- TURN 5: llama-3.1-8b-instruct ---
+  Turn 5: P2's turn
+  P2 → EXCHANGE
+  ⚔️ P3 challenges Ambassador
+  P3 challenged P2 - FAILED! P2 reveals Ambassador
+  P2 uses Exchange (Ambassador)
+  💀 P3 loses Assassin
+  🔄 P2 completes exchange
+  ✓ Action successful
+
+============================================================
+GAME OVER
+Winner: llama-3.3-70b-instruct
+Total Turns: 5
+Ended: 2025-12-06T21:49:32.725Z
+============================================================
